@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Image, Text } from 'react-native';
-import { useLocalSearchParams, useNavigation } from 'expo-router';
+import { Redirect, useLocalSearchParams, useNavigation } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 
 import { PRODUCTS } from '@/utils/data/products';
@@ -16,6 +16,9 @@ export default function Product() {
   const navigation = useNavigation();
   const product = PRODUCTS.find((p) => p.id === id);
 
+  if (!product) {
+    return <Redirect href={'/'} />;
+  }
   function handleAddToCart() {
     if (!product) return;
     cartStore.add(product);
@@ -25,18 +28,19 @@ export default function Product() {
   return (
     <View className="flex-1">
       <Image
-        source={product?.cover}
+        source={product.cover}
         className="w-full h-52 "
         resizeMode="cover"
       />
       <View className="p-5 mt-8 flex-1">
+        <Text className="text-white text-xl font-heading">{product.title}</Text>
         <Text className="text-lime-400 text-2xl font-heading my-2">
-          {formatCurrency(product?.price || 0)}
+          {formatCurrency(product.price || 0)}
         </Text>
         <Text className="text-slate-400 font-body text-base leading-6 mb-6">
-          {product?.description}
+          {product.description}
         </Text>
-        {product?.ingredients.map((ingredient) => (
+        {product.ingredients.map((ingredient) => (
           <Text
             key={ingredient}
             className="text-slate-400 font-body text-base leading-6">

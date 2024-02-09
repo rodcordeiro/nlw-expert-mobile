@@ -1,21 +1,24 @@
 import React from 'react';
-import { View, Text, ScrollView, Alert } from 'react-native';
+import { View, Text, ScrollView, Alert, Linking } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { Feather } from '@expo/vector-icons';
+import { useNavigation } from 'expo-router';
 
 import { ProductCartProps, useCartStore } from '@/stores/cart-store';
+import { formatCurrency } from '@/utils/functions/format-currency';
 
 import { Header } from '@/components/header';
 import { Product } from '@/components/product';
-import { formatCurrency } from '@/utils/functions/format-currency';
 import { Input } from '@/components/input';
 import { Button } from '@/components/button';
 import { LinkButton } from '@/components/link-button';
 
+const PHONE_NUMBER = '<MUST REPLACE WITH A VALID NUMBER>';
+
 export default function Cart() {
   const cartStore = useCartStore();
+  const navigation = useNavigation();
   const [address, setAddress] = React.useState<string>();
-
   const total = formatCurrency(
     cartStore.products.reduce((total, product) => total + product.price, 0),
   );
@@ -28,8 +31,24 @@ export default function Cart() {
   }
 
   function handleOrder() {
-    if (!address) {
+    if (!address || address?.trim().length === 0) {
+      return Alert.alert('Pedido', 'Informe os dados da entrega');
     }
+    const products = cartStore.products
+      .map((product) => `\n ${product.quantity} ${product.title}`)
+      .join('');
+
+    const message = `
+      *🍔 NOVO PEDIDO:*
+      \n Entregar em: ${address}
+      ${products}
+      \n Valor total: ${total}
+     `;
+    Linking.openURL(
+      `http://api.whatsapp.com/send?phone=${PHONE_NUMBER}&text=${message}`,
+    );
+    cartStore.clear();
+    navigation.goBack();
   }
 
   return (
@@ -62,6 +81,9 @@ export default function Cart() {
             <Input
               placeholder="Informe o endereço de entrega com rua, bairro, CEP, número e complemento"
               onChangeText={setAddress}
+              onSubmitEditing={handleOrder}
+              returnKeyType="next"
+              blurOnSubmit
             />
           </View>
         </ScrollView>
